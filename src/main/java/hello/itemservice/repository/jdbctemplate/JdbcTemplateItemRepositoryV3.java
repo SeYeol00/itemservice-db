@@ -7,56 +7,52 @@ import hello.itemservice.repository.ItemUpdateDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
-import java.sql.PreparedStatement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 
 /**
- * NameParameterJdbcTemplate
- * 자바 빈 규약에 맞춰서 데이터베이스에 파라미터를 알아서 매핑 해준다.
- * 자바의 카멜 케이스 ==> 데이터 베이스의 스네이크 케이스(언더스코어)
- * 이것을 알아서 맞춰 주는 것이 이 탬플릿의 핵심 기능이다.
- * 즉 ?을 안 쓴다는 것이다.
+ * SimpleJdbcInsert
  */
 @Slf4j
-public class JdbcTemplateItemRepositoryV2 implements ItemRepository {
+public class JdbcTemplateItemRepositoryV3 implements ItemRepository {
 
 //    private final JdbcTemplate template;
 
     // 파라미터가 순서가 아니라 이름으로 바인딩함
     private final NamedParameterJdbcTemplate template;
+    
+    // insert에서만 도움이 되는 기능
+    private final SimpleJdbcInsert jdbcInsert;
 
-    public JdbcTemplateItemRepositoryV2(DataSource dataSource) {
+    public JdbcTemplateItemRepositoryV3(DataSource dataSource) {
         this.template = new NamedParameterJdbcTemplate(dataSource);
+        this.jdbcInsert = new SimpleJdbcInsert(dataSource)
+                .withTableName("item")
+                .usingGeneratedKeyColumns("id");
+//                .usingColumns("item_name","price","quantity");
+                // 생략 가능
     }
 
     @Override
     public Item save(Item item) {
-        String sql = "insert into item(item_name, price, quantity) " +
-                "values(:itemName,:price,:quantity)";
-        // 케이스 1
-        SqlParameterSource param = new BeanPropertySqlParameterSource(item);
-
-        // Jdbc 키 생성
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        template.update(sql,param,keyHolder);
-
-        long key = keyHolder.getKey().longValue();
-        item.setId(key);
+        BeanPropertySqlParameterSource param = new BeanPropertySqlParameterSource(item);
+       // 키를 반환 여기서 키를 만들어서 준다. pk컬럼 지정
+        Number key = jdbcInsert.executeAndReturnKey(param);
+        // 저장할 때는 키와 같이 setter로 넣는다
+        item.setId(key.longValue());
         return item;
     }
 
