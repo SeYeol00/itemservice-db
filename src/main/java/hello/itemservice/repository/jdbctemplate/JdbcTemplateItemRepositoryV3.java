@@ -65,7 +65,7 @@ public class JdbcTemplateItemRepositoryV3 implements ItemRepository {
         // 케이스 2 -> 파라미터의 이름이 쿼리와 맞지 않을 때 직접 넣는 케이스
         SqlParameterSource param= new MapSqlParameterSource()
                 .addValue("itemName", updateParam.getItemName())
-                .addValue("price",updateParam.getQuantity())
+                .addValue("price",updateParam.getPrice())
                 .addValue("quantity",updateParam.getQuantity())
                 .addValue("id",itemId); // 이 부분이 별도로 필요하다.
         template.update(sql,param);

@@ -5,19 +5,49 @@ import hello.itemservice.repository.ItemSearchCond;
 import hello.itemservice.repository.ItemUpdateDto;
 import hello.itemservice.repository.memory.MemoryItemRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+
+// 테스트에서 중요한 건 격리성, 로컬과 다른 디비를 써야한다.
+// 테스트에서 데이터 찌꺼기가 남는 경우 트랜젝션으로 만들어 커밋과 롤백을 사용하면 된다.
+// 테스트에서 @Transactional도 사용이 가능하다. 테스트에서는 조금 특별하게 사용된다.
+// 클래스에 붙이면 하위 매서드에서 알아서 다 적용 된다.
+// @Transactional은 보통 로직 성공이면 커밋으로 끝나지만
+// 테스트에서는 트랜잭션을 자동으로 롤백시킨다.
+// 테스트는 스프링에 내부 메모리 디비가 있어서 뭐가 필요없다. 그냥 트랜잭션 어노테이션만 붙이자
+
+@Transactional
+@SpringBootTest // @SpirngbootApplication의 설정을 사용한다.
 class ItemRepositoryTest {
 
     @Autowired
     ItemRepository itemRepository;
+
+//    @Autowired
+//    PlatformTransactionManager transactionManager;
+//
+//    // 롤백 할 때 필요
+//    TransactionStatus status;
+//
+//
+//    @BeforeEach
+//    void beforeEach(){
+//        // 모든 테스트 전에 트랜젝션 시작
+//        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+//    }
+
 
     @AfterEach
     void afterEach() {
@@ -25,8 +55,14 @@ class ItemRepositoryTest {
         if (itemRepository instanceof MemoryItemRepository) {
             ((MemoryItemRepository) itemRepository).clearStore();
         }
+        // 트랜잭션 롤백
+        // 이러면 모든 테스트 코드가 돌릴 때 하나의 트랜잭션으로 취급되고
+        // 마지막에 결국 롤백된다.
+        //transactionManager.rollback(status);
     }
 
+    // 혹여나 커밋해서 데이터가 남아있는지 보고 싶으면 @Commit을 붙여주자
+//    @Commit
     @Test
     void save() {
         //given
