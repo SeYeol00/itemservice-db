@@ -4,6 +4,7 @@ import hello.itemservice.repository.ItemRepository;
 import hello.itemservice.repository.ItemSearchCond;
 import hello.itemservice.repository.ItemUpdateDto;
 import hello.itemservice.repository.memory.MemoryItemRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 // 테스트에서는 트랜잭션을 자동으로 롤백시킨다.
 // 테스트는 스프링에 내부 메모리 디비가 있어서 뭐가 필요없다. 그냥 트랜잭션 어노테이션만 붙이자
 
+@Slf4j
 @Transactional
 @SpringBootTest // @SpirngbootApplication의 설정을 사용한다.
 class ItemRepositoryTest {
@@ -100,6 +102,8 @@ class ItemRepositoryTest {
         Item item1 = new Item("itemA-1", 10000, 10);
         Item item2 = new Item("itemA-2", 20000, 20);
         Item item3 = new Item("itemB-1", 30000, 30);
+
+        log.info("repository={}",itemRepository.getClass());
 
         itemRepository.save(item1);
         itemRepository.save(item2);

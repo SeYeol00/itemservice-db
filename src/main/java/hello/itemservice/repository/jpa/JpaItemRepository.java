@@ -18,7 +18,7 @@ import java.util.Optional;
 
 
 @Slf4j
-@Repository
+@Repository // 이게 붙은 클래스는 예외변환 aop의 대상이 된다.
 @Transactional
 @RequiredArgsConstructor
 public class JpaItemRepository implements ItemRepository {
