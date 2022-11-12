@@ -25,7 +25,7 @@ public class JpaItemRepositoryV3 implements ItemRepository {
     // 쿼리 DSL 사용시 필요
     private final JPAQueryFactory query;
 
-    public JpaItemRepositoryV3(EntityManager em,) {
+    public JpaItemRepositoryV3(EntityManager em) {
         this.em = em;
         // 결과적으로 쿼리 dsl은 jpa의 jpql의 빌더 역할을 한다.
         // jdbc 켐플릿이랑 비슷하다고 보면 된다.
@@ -65,7 +65,7 @@ public class JpaItemRepositoryV3 implements ItemRepository {
 
         BooleanBuilder builder = new BooleanBuilder();
         if(StringUtils.hasText(itemName)){
-            builder.and(item.i)
+//            builder.and(item.i)
         }
         List<Item> result = query.select(item)
                 .from(item)
