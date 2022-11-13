@@ -1,6 +1,7 @@
 package hello.itemservice.repository.jpa;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import hello.itemservice.domain.Item;
 import hello.itemservice.domain.QItem;
@@ -56,21 +57,62 @@ public class JpaItemRepositoryV3 implements ItemRepository {
     }
 
     // 동적 쿼리 구간
+//    @Override
+    public List<Item> findAllOld(ItemSearchCond cond) {
+        String itemName = cond.getItemName();
+        Integer maxPrice = cond.getMaxPrice();
+
+//        QItem item = new QItem("i"); // i가 엘리어스
+
+        // builder를 사용해서 조건을 추가한다.
+        BooleanBuilder builder = new BooleanBuilder();
+        if(StringUtils.hasText(itemName)){
+            builder.and(item.itemName.like("%" + itemName +"%"));
+        }
+        if(maxPrice!=null){ // less or equal
+            builder.and(item.price.loe(maxPrice));
+        }
+        List<Item> result = query.select(item)
+                .from(item)
+                .where(builder)// 생성한 빌더를 웨어 조건에 넣어준다.
+                .fetch();// fetch는 리스트
+        return result;
+    }
+
     @Override
     public List<Item> findAll(ItemSearchCond cond) {
         String itemName = cond.getItemName();
         Integer maxPrice = cond.getMaxPrice();
 
 //        QItem item = new QItem("i"); // i가 엘리어스
-
-        BooleanBuilder builder = new BooleanBuilder();
-        if(StringUtils.hasText(itemName)){
-//            builder.and(item.i)
-        }
-        List<Item> result = query.select(item)
+        List<Item> result = query
+                .select(item)
                 .from(item)
-                .where()
+                .where(
+                        likeItemNames(itemName)
+                        ,maxPrice(maxPrice))
+                // private 함수로 리펙터링을 한다.
+                // 여기서 , 은 and 조건의 의미를 갖는다.
                 .fetch();// fetch는 리스트
         return result;
+    }
+
+    // 그냥 불린 값이 아니니 불린 익스프레션을 반환하는 것이다.
+    private BooleanExpression likeItemNames(String itemName){
+        if(StringUtils.hasText(itemName)){
+            return (item.itemName.like("%" + itemName +"%"));
+        }
+        else{
+            return null;
+        }
+    }
+
+    private BooleanExpression maxPrice(Integer maxPrice){
+        if(maxPrice != null){ // less or equal
+            return (item.price.loe(maxPrice));
+        }
+        else{
+            return null;
+        }
     }
 }
